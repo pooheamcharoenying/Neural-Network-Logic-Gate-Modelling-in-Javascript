@@ -1,0 +1,287 @@
+<h1> Neural Network Demo </h1>
+
+<canvas id="myCanvas" width="2000" height="1000" style="border:1px solid"> </canvas>
+
+
+<script>
+
+    var canvas = document.getElementById("myCanvas")
+    var ctx = canvas.getContext("2d");
+
+    // neuron1 คือ object ของ class Neuron, สร้าง instance, object = instance
+    var input1 = new Input([100, 100])
+    input1.val = 0;
+    // var input2 = new Input([100, 600])
+    // input2.val = 1;
+
+
+    // Polynomial Regression
+    var neuron1 = new Neuron(1, [300, 100], [[100, 100]], 'Relu')
+    var neuron2 = new Neuron(1, [300, 400], [[100, 100]], 'Relu')
+    var neuron3 = new Neuron(1, [300, 600], [[100, 100]], 'Relu')
+    var neuron4 = new Neuron(1, [300, 800], [[100, 100]], 'Relu')
+    var neuron5 = new Neuron(4, [600, 300], [neuron1.pos, neuron2.pos, neuron3.pos, neuron4.pos], 'Relu')
+
+
+
+    var myTrainingInterval = setInterval(trainingLoop, 20)
+
+    var count = 0;
+
+    target = [];
+    for (var i=0; i<100; i++) {
+        //data[i] = i;
+        target.push(i);
+    }
+
+
+
+    neuron3weight1History = []
+
+    function trainingLoop() {
+
+        if (count < 10000) {
+
+            var random = Math.random();
+            var dataIndex = Math.round(Math.random() * 99);
+
+            input1.val = dataIndex;
+
+
+            var neuron1Output = neuron1.forwardRun([input1.val]) // layer 1
+            var neuron2Output = neuron2.forwardRun([input1.val]) // layer 1
+            var neuron3Output = neuron3.forwardRun([input1.val]) // layer 1
+            var neuron4Output = neuron4.forwardRun([input1.val]) // layer 1
+            var networkOutput = neuron5.forwardRun([neuron1.output, neuron2.output, neuron3.output, neuron4.output])  // layer 2, output layer
+
+            neuron3weight1History.push(neuron3.weight[0])
+
+            // Calculate root mean square loss of neural network
+            var Loss = (target[dataIndex] - networkOutput) * (target[dataIndex] - networkOutput)
+            var LossGradient = -2 * target[dataIndex] + 2 * networkOutput //   dL / dO
+
+            // if (Math.abs(Loss) < 0.1) {
+            //     LossGradient = 0;
+            // }
+            console.log("Target: " + target[dataIndex] + ", Network Output: " + networkOutput)
+            console.log("Loss: " + Loss)
+            console.log("Loss Gradient: " + LossGradient)
+
+            var inputGradient = neuron5.backPropagation(LossGradient)
+
+
+
+            neuron1.backPropagation(inputGradient[0])
+            neuron2.backPropagation(inputGradient[1])
+            neuron3.backPropagation(inputGradient[2])
+            neuron4.backPropagation(inputGradient[3])
+
+            ctx.fillStyle = "white"
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            neuron1.draw()
+            neuron2.draw()
+            neuron3.draw()
+            neuron4.draw()
+            neuron5.draw()
+            input1.draw()
+            // input2.draw()
+
+            count = count + 1;
+
+            ctx.font = "30px Arial";
+            ctx.fillStyle = "black"
+            ctx.fillText("Training Generation: " + count, 600, 500);
+            ctx.fillText("Target: " + target[dataIndex], 600, 550);
+            ctx.fillText("Network Ouptut: " + networkOutput.toFixed(2), 600, 600);
+
+            if (Math.abs(target[dataIndex] - networkOutput) < 0.5) {
+                ctx.fillText("Result: Correct", 600, 650);
+            } else {
+                ctx.fillText("Result: Wrong", 600, 650);
+            }
+
+        }
+        else if (count == 10000) {
+            clearInterval(myTrainingInterval)
+
+            console.log('draw weight history')
+            for (i in neuron3weight1History) {
+                var y = neuron3weight1History[i] * 100 + 500
+                console.log("i " + i)
+                console.log("y " + y)
+                ctx.beginPath();
+                ctx.arc(i / 10, y, 2, 0, 2 * Math.PI);
+                ctx.fillStyle = "red"
+                ctx.fill()
+                ctx.stroke();
+            }
+        }
+
+
+    }
+
+
+    // This is like a Neuron Class
+    function Neuron(inputLength, neuronPos, inputPos, activation) {
+        this.pos = neuronPos;
+        this.x = neuronPos[0]
+        this.y = neuronPos[1]
+
+        this.inputPos = inputPos;
+
+        this.activation = activation;
+
+        this.weight = []
+
+        for (var i = 0; i < inputLength; i++) {
+            this.weight.push(Math.random()*5 - 2.5)
+        }
+        console.log('weight')
+        console.log(this.weight)
+
+        this.bias = Math.random() - 0.5
+        this.output = 0;
+        this.input = [];
+
+        this.forwardRun = function (inputList) {
+            this.input = inputList;
+            this.output = 0;
+            for (var i in inputList) {
+                this.output = this.output + inputList[i] * this.weight[i]
+            }
+
+            this.output = this.output + this.bias;
+
+
+            // Sigmoid activation function
+            if (this.activation == 'Sigmoid') {
+                this.output = 1 / (1 + Math.exp(-this.output))
+            }
+
+            // Relu activation function
+            if (this.activation == 'Relu') {
+                if (this.output < 0) {
+                    this.output = 0;
+                }
+            }
+
+
+            return this.output
+        }
+
+        this.backPropagation = function (lossGradient) {
+
+            // const oTemp1 = 1 / this.output;
+
+            var biasGradient = 0;
+            // Sigmoid 
+            // console.log('jammin ju')
+            // console.log(this.activation)
+            if (this.activation == 'Sigmoid') {
+                const oTemp1 = 1 / this.output;
+                const bTemp1 = lossGradient * (-1 / (oTemp1 * oTemp1));
+
+                const oTemp2 = Math.log(oTemp1 - 1)
+                const bTemp2 = bTemp1 * Math.exp(oTemp2)
+
+                const oTemp3 = -oTemp2;
+                const bTemp3 = -bTemp2;
+                biasGradient = bTemp3;
+            }
+
+
+            // Relu
+            if (this.activation == 'Relu') {
+                if (this.output >= 0) {
+                    biasGradient= lossGradient;
+                } else {
+                    biasGradient = 0;
+                }
+                // biasGradient = bTemp3;
+            }
+
+            // update bias using gradient descent
+            this.bias = this.bias - biasGradient * 0.00001;
+
+            this.inputGradient = []
+            for (var i = 0; i < this.weight.length; i++) {
+
+                // calculate weight gradient compared to Neural Netowrk Loss
+                weightGradient = biasGradient * this.input[i];
+
+                // calculate input gradient compared to Neural Netowrk Loss
+                inputGradient = biasGradient * this.weight[i];
+
+                // update weight using gradient descent
+                this.weight[i] = this.weight[i] - weightGradient * 0.00001;
+
+                this.inputGradient.push(inputGradient)
+            }
+
+            return this.inputGradient
+
+        }
+
+        this.draw = function () {
+            // Draw Neuron
+            ctx.beginPath()
+            ctx.arc(this.x, this.y, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = "blue"
+            ctx.fill()
+            ctx.stroke();
+
+            // Draw line to previous layer
+            var i = 0;
+            for (var item of inputPos) {
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y)
+                ctx.lineTo(item[0], item[1])
+                ctx.stroke();
+
+                // Write input value
+                ctx.font = "25px Arial"
+                ctx.fillStyle = "red"
+                ctx.fillText(this.weight[i].toFixed(2), (this.x + item[0]) / 2, (this.y + item[1]) / 2)
+
+                i = i + 1;
+            }
+
+            // Weight value
+            ctx.font = "25px Arial"
+            ctx.fillStyle = "red"
+            ctx.fillText(this.output.toFixed(2), this.x - 20, this.y + 10)
+
+            // Bias value
+            ctx.font = "25px Arial"
+            ctx.fillStyle = "green"
+            ctx.fillText(this.bias.toFixed(2), this.x - 20, this.y - 40)
+
+
+        }
+    }
+
+
+
+    // This is like a Neuron Class
+    function Input(inputPos) {
+        this.x = inputPos[0]
+        this.y = inputPos[1]
+        this.val = 0;
+
+        this.draw = function () {
+            // Draw Input
+            ctx.beginPath()
+            ctx.arc(this.x, this.y, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = "green"
+            ctx.fill()
+            ctx.stroke();
+
+            // Write input value
+            ctx.font = "25px Arial"
+            ctx.fillStyle = "red"
+            ctx.fillText(this.val, this.x - 10, this.y + 10)
+        }
+    }
+
+</script>

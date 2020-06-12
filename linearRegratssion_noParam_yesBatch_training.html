@@ -1,0 +1,375 @@
+<h1> Machine Learning Demo </h1>
+
+<canvas id="myCanvas" width="1000" height="700" style="border:1px solid #000000;"></canvas>
+
+<p> Four legged walker. No physics involved. Pure kinematics. </p>
+<script>
+
+      var canvas = document.getElementById("myCanvas");
+      var ctx = canvas.getContext("2d");
+
+
+      function mainLoop() {
+            // console.log("ballSpeed: " + ball.yDot + ", springSpeed: " + spring.yDot)
+
+      }
+
+      window.addEventListener("keypress", keypressHandler);
+      window.addEventListener("keyup", keyupHandler);
+
+      var mode = "auto"
+      function keypressHandler(event) {
+            console.log(event.key)
+      }
+
+      function keyupHandler(event) {
+            console.log(event.key)
+      }
+
+
+
+
+      input1 = 1;
+      input2 = 2;
+      input3 = 3;
+      neuron1 = new Neuron('Sigmoid', 1)
+      neuron2 = new Neuron('Sigmoid', 1)
+      neuron3 = new Neuron('Sigmoid', 1)
+      neuron4 = new Neuron('Sigmoid', 1)
+      neuron5 = new Neuron('Sigmoid', 1)
+      neuron6 = new Neuron('Sigmoid', 1)
+
+      neuron7 = new Neuron('Sigmoid', 6)
+      neuron8 = new Neuron('Sigmoid', 6)
+      neuron9 = new Neuron('Sigmoid', 6)
+      neuron10 = new Neuron('Sigmoid', 6)
+      neuron11 = new Neuron('Sigmoid', 6)
+
+      neuron12 = new Neuron('Linear', 5)
+
+      var neuronList = [neuron1, neuron2, neuron3, neuron4, neuron5, neuron6, neuron7, neuron8, neuron9, neuron10, neuron11, neuron12]
+
+
+
+      var data = []
+      var target = [];
+
+      // Dataset for Training
+      var y = 2 * x * x + 4;
+      for (var i = 0; i < 100; i++) {
+            var x = Math.random()
+
+            data.push(x);
+            x = (x - 0.5) * 2
+            target.push( x * 2 + 3)
+            // target.push(    (x*x*x) + (x*x*2) + 3 )
+      }
+
+      var dataTest = []
+      var targetTest = []
+
+      // Dataset for Training
+      for (var i = 0; i < 40; i++) {
+            var x = Math.random()
+
+            dataTest.push(x);
+            x = (x - 0.5) * 2
+            targetTest.push( x * 2 + 3)
+            // targetTest.push(   (x*x*x) + (x*x*2) + 3 )
+      }
+
+
+      var count = 0;
+      setInterval(mainLoop, 10)
+      function mainLoop() {
+            if (count < 50000) {
+
+
+                  var dataIndex = Math.round(Math.random() * 99)
+
+                  var runningTotalOutput = 0;
+                  var LossGrad = 0;
+                  var runningLossGrad = 0;
+                  var networkOutput = 0;
+                  for (var i = 0; i < 20; i++) {
+                        var dataIndex = Math.round(Math.random() * 99)
+                        var Layer2Out1 = neuron7.run([neuron1.run([data[dataIndex]]), neuron2.run([data[dataIndex]]), neuron3.run([data[dataIndex]]), neuron4.run([data[dataIndex]]), neuron5.run([data[dataIndex]]), neuron6.run([data[dataIndex]])])
+                        var Layer2Out2 = neuron8.run([neuron1.run([data[dataIndex]]), neuron2.run([data[dataIndex]]), neuron3.run([data[dataIndex]]), neuron4.run([data[dataIndex]]), neuron5.run([data[dataIndex]]), neuron6.run([data[dataIndex]])])
+                        var Layer2Out3 = neuron9.run([neuron1.run([data[dataIndex]]), neuron2.run([data[dataIndex]]), neuron3.run([data[dataIndex]]), neuron4.run([data[dataIndex]]), neuron5.run([data[dataIndex]]), neuron6.run([data[dataIndex]])])
+                        var Layer2Out4 = neuron10.run([neuron1.run([data[dataIndex]]), neuron2.run([data[dataIndex]]), neuron3.run([data[dataIndex]]), neuron4.run([data[dataIndex]]), neuron5.run([data[dataIndex]]), neuron6.run([data[dataIndex]])])
+                        var Layer2Out5 = neuron11.run([neuron1.run([data[dataIndex]]), neuron2.run([data[dataIndex]]), neuron3.run([data[dataIndex]]), neuron4.run([data[dataIndex]]), neuron5.run([data[dataIndex]]), neuron6.run([data[dataIndex]])])
+
+                        networkOutput = neuron12.run([Layer2Out1, Layer2Out2, Layer2Out3, Layer2Out4, Layer2Out5])
+
+                        var Loss = (target[dataIndex] - networkOutput) * (target[dataIndex] - networkOutput);
+                        LossGrad = -2 * target[dataIndex] + 2 * networkOutput;
+                        console.log('Loss ' + LossGrad)
+                        if (Loss < 0.05) {
+                              Loss = 0;
+                              LossGrad = 0;
+                        }
+
+                        runningLossGrad = runningLossGrad + LossGrad;
+                  }
+
+                  LossGrad = runningLossGrad/ 20;
+
+
+                  // Back Propagation
+                  var lastLayerBackProp = neuron12.backProp(LossGrad)
+
+                  var Layer2BackProp1 = neuron7.backProp(lastLayerBackProp[0])
+                  var Layer2BackProp2 = neuron8.backProp(lastLayerBackProp[1])
+                  var Layer2BackProp3 = neuron9.backProp(lastLayerBackProp[2])
+                  var Layer2BackProp4 = neuron10.backProp(lastLayerBackProp[3])
+                  var Layer2BackProp5 = neuron11.backProp(lastLayerBackProp[4])
+
+
+                  neuron1.backProp(Layer2BackProp1[0] + Layer2BackProp2[0] + Layer2BackProp3[0] + Layer2BackProp4[0] + Layer2BackProp5[0])
+                  neuron2.backProp(Layer2BackProp1[1] + Layer2BackProp2[1] + Layer2BackProp3[1] + Layer2BackProp4[1] + Layer2BackProp5[1])
+                  neuron3.backProp(Layer2BackProp1[2] + Layer2BackProp2[2] + Layer2BackProp3[2] + Layer2BackProp4[2] + Layer2BackProp5[2])
+                  neuron4.backProp(Layer2BackProp1[3] + Layer2BackProp2[3] + Layer2BackProp3[3] + Layer2BackProp4[3] + Layer2BackProp5[3])
+                  neuron5.backProp(Layer2BackProp1[4] + Layer2BackProp2[4] + Layer2BackProp3[4] + Layer2BackProp4[4] + Layer2BackProp5[4])
+                  neuron6.backProp(Layer2BackProp1[5] + Layer2BackProp2[5] + Layer2BackProp3[5] + Layer2BackProp4[5] + Layer2BackProp5[5])
+
+
+                  drawWeights(Loss, target[dataIndex], networkOutput, data[dataIndex], count)
+
+                  count++
+            }
+      }
+
+
+      var runningLoss = 0;
+      var avgLoss = 0;
+      var inputOld = 0;
+      var networkOutputOld = 0;
+
+      var networkOutputList = []
+      var inputList = []
+      var validationList = []
+
+      function drawWeights(Loss, target, networkOutput, input, count) {
+
+            ctx.beginPath();
+            ctx.rect(0, 0, canvas.width, 150);
+            ctx.fillStyle = 'green'
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.rect(300, 0, canvas.width - 300, canvas.height);
+            ctx.fillStyle = 'green'
+            ctx.fill();
+
+            for (var i in neuronList) {
+                  for (var j in neuronList[i].weightList) {
+                        ctx.font = "14px Arial";
+                        ctx.fillStyle = "red";
+                        ctx.fillText(neuronList[i].weightList[j].toFixed(2), 50 + (i * 50) + 5, 50 + (j * 50) + 30);
+                  }
+                  ctx.fillStyle = "blue";
+                  ctx.fillText(neuronList[i].bias.toFixed(2), 50 + (i * 50) + 5, 40);
+            }
+
+            ctx.font = "24px Arial";
+            ctx.fillStyle = "red";
+            ctx.fillText("Generations: " + count, 650, 150);
+
+            ctx.font = "18px Arial";
+            ctx.fillStyle = "red";
+
+            ctx.fillText("Input: " + input, 650, 180);
+            ctx.fillText("Target: " + target, 650, 210);
+            ctx.fillText("networkOutput: " + networkOutput.toFixed(1), 650, 240);
+
+            ctx.font = "24px Arial";
+            if (count % 10 == 0) {
+                  // console.log("runningLoss: " + runningLoss)
+                  avgLoss = (runningLoss / 10).toFixed(3)
+                  runningLoss = 0;
+            } else {
+                  runningLoss = runningLoss + Loss;
+            }
+            ctx.fillText("Loss: " + avgLoss, 650, 270);
+
+            if (Math.abs(Loss) < 0.5) {
+                  console.log('correct')
+                  ctx.fillText("Prediction Correct", 650, 320);
+            } else {
+                  console.log('wrong')
+                  ctx.fillText("Prediction Wrong", 650, 320);
+            }
+
+
+            // ctx.beginPath();
+            // ctx.rect(50, 200, 200, 200);
+            // ctx.fillStyle = 'white'
+            // ctx.fill();
+            // ctx.stroke();
+
+
+
+            // setTimeout(function () { updateGraph(inputOld, networkOutputOld) }, 1000)
+
+            // ctx.stroke();
+
+            if (count % 10 == 0) {
+                  for (var i in inputList) {
+                        ctx.beginPath();
+                        // console.log('input: ' + input)
+                        ctx.arc(50 + inputList[i] * 100 * 2, 600 - networkOutputList[i] * 20, 5, 0, 2 * Math.PI);
+                        ctx.fillStyle = 'white'
+                        ctx.fill();
+                  }
+                  inputList = []
+                  networkOutputList = []
+
+            } else {
+                  ctx.beginPath();
+                  // console.log('input: ' + input)
+                  ctx.arc(50 + input * 100 * 2, 600 - networkOutput * 20, 5, 0, 2 * Math.PI);
+                  ctx.fillStyle = 'red'
+                  ctx.fill();
+
+                  inputList.push(input)
+                  networkOutputList.push(networkOutput)
+            }
+
+            if (count % 500 == 0) {
+
+                  for (var i in validationList) {
+                        ctx.beginPath();
+                        // console.log('input: ' + input)
+                        ctx.arc(50 + validationList[i][0] * 100 * 2, 600 - validationList[i][1] * 20, 5, 0, 2 * Math.PI);
+                        ctx.fillStyle = 'white'
+                        ctx.fill();
+                  }
+                  validationList = []
+
+                  for (var i in dataTest) {
+                        var Layer2Out1 = neuron7.run([neuron1.run([dataTest[i]]), neuron2.run([dataTest[i]]), neuron3.run([dataTest[i]]), neuron4.run([dataTest[i]]), neuron5.run([dataTest[i]]), neuron6.run([dataTest[i]])])
+                        var Layer2Out2 = neuron8.run([neuron1.run([dataTest[i]]), neuron2.run([dataTest[i]]), neuron3.run([dataTest[i]]), neuron4.run([dataTest[i]]), neuron5.run([dataTest[i]]), neuron6.run([dataTest[i]])])
+                        var Layer2Out3 = neuron9.run([neuron1.run([dataTest[i]]), neuron2.run([dataTest[i]]), neuron3.run([dataTest[i]]), neuron4.run([dataTest[i]]), neuron5.run([dataTest[i]]), neuron6.run([dataTest[i]])])
+                        var Layer2Out4 = neuron10.run([neuron1.run([dataTest[i]]), neuron2.run([dataTest[i]]), neuron3.run([dataTest[i]]), neuron4.run([dataTest[i]]), neuron5.run([dataTest[i]]), neuron6.run([dataTest[i]])])
+                        var Layer2Out5 = neuron11.run([neuron1.run([dataTest[i]]), neuron2.run([dataTest[i]]), neuron3.run([dataTest[i]]), neuron4.run([dataTest[i]]), neuron5.run([dataTest[i]]), neuron6.run([dataTest[i]])])
+
+                        var networkOutput = neuron12.run([Layer2Out1, Layer2Out2, Layer2Out3, Layer2Out4, Layer2Out5])
+
+                        ctx.beginPath();
+                        ctx.arc(50 + dataTest[i] * 100 * 2, 600 - networkOutput * 20, 5, 0, 2 * Math.PI);
+                        ctx.fillStyle = 'green'
+                        ctx.fill();
+
+                        validationList.push([dataTest[i], networkOutput])
+                  }
+
+
+            }
+
+
+            inputOld = input;
+            networkOutputOld = networkOutput;
+
+            ctx.beginPath();
+            // console.log('target: ' + target)
+            ctx.arc(50 + input * 100 * 2, 600 - target * 20, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = 'blue'
+            ctx.fill();
+            ctx.stroke();
+      }
+
+
+      // console.log(neuron1.weightList)
+      // console.log(neuron2.weightList)
+
+      function Neuron(type, inputLength) {
+
+            // Body Point
+            this.type = type
+            this.inputList = [];
+            this.inputGradientList = [];
+            this.weightList = []
+
+            for (var i = 0; i < inputLength; i++) {
+                  this.weightList.push(Math.random() - 0.5)
+                  // this.weightList.push(0)
+            }
+            console.log(this.weightList)
+
+
+            this.bias = 0;
+            this.bias = Math.random() - 0.5;
+            this.output = 0;
+
+            // Position Link List
+            // this.linkList = [this.xC,]
+
+            this.run = function (inputList) {
+                  this.inputList = inputList
+                  this.output = 0;
+                  for (var i = 0; i < inputList.length; i++) {
+                        this.output = this.output + inputList[i] * this.weightList[i]
+                  }
+                  this.output = this.output + this.bias;
+
+                  if (this.type == "Relu") {
+                        // console.log('relu')
+                        if (this.output < 0) {
+                              this.output = 0;
+                        }
+                  } else if (this.type == "Sigmoid") {
+                        // console.log('sigmoid')
+                        this.output = 1 / (1 + Math.pow(Math.E, -this.output));
+                  } else if (this.type == "Linear") {
+                        // console.log('sigmoid')
+                        this.output = this.output;
+                  }
+
+                  return this.output;
+            }
+
+            this.backProp = function (lastLoss) {
+
+                  var btemp3 = 0
+                  if (this.type == "Sigmoid") {
+                        // console.log('backProp')
+                        const oTemp1 = 1 / this.output
+                        const bTemp1 = -1 / (oTemp1 * oTemp1) * lastLoss; // before inversion
+                        const oTemp2 = Math.log(oTemp1 - 1)
+                        const bTemp2 = Math.exp(oTemp2) * bTemp1; // before exponential
+                        const oTemp3 = -oTemp2; // after summation
+                        bTemp3 = -bTemp2; // after summation
+                  }
+
+                  if (this.type == "Linear") {
+                        bTemp3 = lastLoss;
+                  }
+
+                  // console.log('btemp3: ' + bTemp3)
+                  // console.log('joja: ' + this.inputList)
+                  // console.log('jojo: ' + this.weightList[0])
+
+                  this.bias = this.bias - bTemp3 * 0.001;
+
+                  this.inputGradientList = []
+                  for (var i = 0; i < this.weightList.length; i++) {
+                        // console.log('y')
+                        var weightGradient = this.inputList[i] * bTemp3;
+                        var inputGradient = this.weightList[i] * bTemp3;
+
+                        this.weightList[i] = this.weightList[i] + weightGradient * -0.2;
+
+                        this.inputGradientList.push(inputGradient)
+
+                        // console.log(weightGradient)
+                  }
+
+                  return (this.inputGradientList)
+
+            }
+
+
+      }
+
+
+</script>

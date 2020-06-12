@@ -238,7 +238,7 @@
 
         this.backPropagation = function (lossGradient) {
 
-            // const oTemp1 = 1 / this.output;
+            // Sigmoid backpropagation calculation
             const oTemp1 = 1 / this.output;
             const bTemp1 = lossGradient * (-1 / (oTemp1 * oTemp1));
 
